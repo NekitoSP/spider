@@ -10,6 +10,7 @@
 //Implementation of hook_init()
 function spider_init() {
   drupal_add_css(drupal_get_path('module', 'spider') .'/spider.css');
+  drupal_add_js(drupal_get_path('module', 'spider') .'/spider.js');
 }
 
 /**
@@ -21,11 +22,21 @@ function spider_admin() {
 
   $form['spider_maxdisp'] = array(
     '#type' => 'textfield',
-    '#title' => t('Maximum number of links'),
+    '#title' => t('Number of links in widget'),
     '#default_value' => variable_get('spider_maxdisp', 3),
     '#size' => 2,
     '#maxlength' => 2,
     '#description' => t("The maximum number of links to display in the block."),
+    '#required' => TRUE,
+  );
+  
+  $form['spider_maxdisp_page'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Number of links on the jobs page'),
+    '#default_value' => variable_get('spider_maxdisp_page', 10),
+    '#size' => 2,
+    '#maxlength' => 2,
+    '#description' => t("The maximum number of links to display on the module page."),
     '#required' => TRUE,
   );
 
@@ -33,16 +44,25 @@ function spider_admin() {
 }
 
 /**
- * Check the input value for maxdisp
+ * Input values validation
  *
  */
 function spider_admin_validate($form, &$form_state) {
+	// for widget 
 	$maxdisp = $form_state['values']['spider_maxdisp'];
 	if (!is_numeric($maxdisp)) {
 		form_set_error('spider_maxdisp', t('You must enter an integer for the maximum number of links.'));
 	}
 	else if ($maxdisp <= 0) {
     	form_set_error('spider_maxdisp', t('Maximum number of links must be positive.'));
+    }
+    //for page
+    $maxdisp_page = $form_state['values']['spider_maxdisp_page'];
+	if (!is_numeric($maxdisp_page)) {
+		form_set_error('spider_maxdisp_page', t('You must enter an integer for the maximum number of links.'));
+	}
+	else if ($maxdisp_page <= 0) {
+    	form_set_error('spider_maxdisp_page', t('Maximum number of links must be positive.'));
     }
 }
 
@@ -148,7 +168,8 @@ function spider_all() {
   	// Creating query
   	$query = "SELECT name, jobdescription, wagefrom, wageto FROM {spider_joblist} ORDER BY updated DESC";
   	
-  	$queryResult = pager_query($query, 5);
+  	$limit = variable_get("spider_maxdisp_page", 5);
+  	$queryResult = pager_query($query, $limit);
   	//$queryResult =  db_query($query);
   	while ($links = db_fetch_object($queryResult)) {
   	  //Convert epoch linux time
@@ -163,7 +184,7 @@ function spider_all() {
   		else
   		  	$wage = t("From $links->wagefrom up to $links->wageto");
   		
-  		$content = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+  		$content = "<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p><p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>";
   		
   		$page_content .= 
   		  '<div class="spider-item">
@@ -190,7 +211,7 @@ function spider_all() {
 function spider_search($input) {
 	$page_content .= '<div id="spider-all">';
 
-	//$input = "Менеджер";
+	$input = "Web";
 	// Creating query
 	$query = "SELECT name, jobdescription FROM {spider_joblist} WHERE name LIKE '%$input%' OR jobdescription LIKE '%$input%' ORDER BY updated DESC";
 	
@@ -209,7 +230,7 @@ function spider_search($input) {
 		else
 		  	$wage = t("From $links->wagefrom up to $links->wageto");
 		
-		$content = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+		$content = "<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p><p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>";
 		
 		$page_content .= 
 		  '<div class="spider-item">

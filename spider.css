@@ -38,3 +38,8 @@
 	display: inline;	
 	margin-left: 5px;
 }
+
+.spider-item-description {
+	display:block;
+    overflow:hidden;
+}
