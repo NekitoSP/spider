@@ -1,0 +1,126 @@
+<?php
+
+function spider_enable() {
+	drupal_install_schema('spider');
+}
+
+function spider_disable(){
+	drupal_uninstall_schema('spider');
+}
+
+function spider_schema(){
+	$schema['spider_companies'] = array(
+		'description' => 'Companies list for HeadHunter spider.',
+		'fields' => array(
+			'id' => array(
+				'type' => 'serial',
+				'not null' => TRUE,
+				'description' => 'Primary Key: Unique comp ID.',
+			),
+			'name' => array(
+				'type' => 'varchar',
+				'length' => 255,
+				'not null' => TRUE,
+				'default' => '',
+				'description' => 'Comp. name',
+			),
+			'site' => array(
+				'type' => 'varchar',
+				'length' => 255,
+				'not null' => TRUE,
+				'default' => '',
+				'description' => 'Comp. site',
+			),
+			'logo' => array(
+				'type' => 'varchar',
+				'length' => 255,
+				'not null' => TRUE,
+				'default' => '',
+				'description' => 'Comp. logo',
+			),
+			'about' => array(
+				'type' => 'text',
+				'not null' => TRUE,
+				'size' => 'big',
+				'description' => 'Comp. description',
+			),
+			'jobscount' => array(
+				'type' => 'int',
+				'not null' => TRUE,
+				'default' => 0,
+				'description' => 'Comp. jobs count',
+			),
+		),
+		'primary key' => array('id')
+	);
+	
+	//TODO: add spider_joblist
+	/*
+	id,
+	name,
+	comp id,
+	update date,
+	z/p from
+	z/p to
+	z/p currency,
+	job description,
+	*/
+	
+	$schema['spider_joblist'] = array(
+		'description' => 'Job list for HeadHunter spider module',
+		'fields' => array(
+			'id' => array(
+				'type' => 'serial',
+				'not null' => TRUE,
+				'description' => 'Primary Key: Unique job ID.',
+			),
+			'name' => array(
+				'type' => 'varchar',
+				'length' => 255,
+				'not null' => TRUE,
+				'default' => '',
+				'description' => 'Job name',
+			),
+			'compid' => array(
+				'type' => 'int',
+				'not null' => TRUE,
+				'description' => 'Comp. ID',
+			),
+			'updated' => array(
+				'type' => 'int',
+				'not null' => TRUE,
+				'default' => 0,
+				'description' => 'Updated date',
+			),
+			'wagefrom' => array(
+				'type' => 'int',
+				'not null' => TRUE,
+				'default' => 0,
+				'description' => 'Wage from',
+			),
+			'wageto' => array(
+				'type' => 'int',
+				'not null' => TRUE,
+				'default' => 0,
+				'description' => 'Wage to',
+			),
+			'wagecurrency' => array(
+				'type' => 'int',
+				'not null' => TRUE,
+				'default' => 0,
+				'description' => 'Wage currency',
+			),
+			'jobdescription' => array(
+				'type' => 'text',
+				'not null' => TRUE,
+				'size' => 'big',
+				'description' => 'Job description',
+			),
+		),
+		'primary key' => array('id')
+	);
+	return $schema;
+}
+
+
+?>

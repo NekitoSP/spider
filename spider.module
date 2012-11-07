@@ -1,0 +1,229 @@
+<?php
+// $Id$
+/**
+* @file
+* Spider
+* @see http://ugatu.ac.ru
+*/
+
+
+//Implementation of hook_init()
+function spider_init() {
+  drupal_add_css(drupal_get_path('module', 'spider') .'/spider.css');
+}
+
+/**
+ * Settings page for module
+ *
+ */
+function spider_admin() {
+  $form = array();
+
+  $form['spider_maxdisp'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Maximum number of links'),
+    '#default_value' => variable_get('spider_maxdisp', 3),
+    '#size' => 2,
+    '#maxlength' => 2,
+    '#description' => t("The maximum number of links to display in the block."),
+    '#required' => TRUE,
+  );
+
+  return system_settings_form($form);
+}
+
+/**
+ * Check the input value for maxdisp
+ *
+ */
+function spider_admin_validate($form, &$form_state) {
+	$maxdisp = $form_state['values']['spider_maxdisp'];
+	if (!is_numeric($maxdisp)) {
+		form_set_error('spider_maxdisp', t('You must enter an integer for the maximum number of links.'));
+	}
+	else if ($maxdisp <= 0) {
+    	form_set_error('spider_maxdisp', t('Maximum number of links must be positive.'));
+    }
+}
+
+/**
+ * Telling Drupal about our new functions
+ *
+ */
+function spider_menu() {
+  $items = array();
+  // Settings
+  $items['admin/settings/spider'] = array(
+    'title' => t("Spider settings"),
+    'description' => t("Spider settings page"),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('spider_admin'),
+    'access arguments' => array('administer spider settings'),
+    'type' => MENU_NORMAL_ITEM,
+   );
+   // Page with a list of all jobs
+   $items['jobs'] = array(
+    'title' => t("All Jobs"),
+    'page callback' => 'spider_all',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK
+  );
+  // Page with search results
+   $items['jobs/search/'] = array(
+    'title' => t("Job Search"),
+    'page callback' => 'spider_search',
+    'page arguments' => array(2),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK
+  );
+
+  return $items;
+}
+
+function spider_block($op='list', $delta=0, $edit=array()) {
+	switch ($op) {
+	
+		case 'list':
+			$blocks[0]['info'] = t('IT Jobs');
+			break;
+			
+		case 'view':
+			// Generate content for blocks from this module
+			$block_content = "";
+			
+			//Get today's date
+			$today = getdate();
+			
+			//Get timestamp from one week ago
+			$start_time = mktime(0,0,0, $today["mon"], ($today["mday"] -7), $today["year"]);
+        
+			//Limit timespan to one day
+			$end_time = $start_time + 86400; //60*60*24 = seconds/day
+			
+			//Get max limit
+			$limitnum = variable_get("spider_maxdisp", 3);
+			
+			//Get nodes in range
+			$query = "SELECT name, jobdescription FROM {spider_joblist} ORDER BY updated DESC";
+			$query_result = db_query_range($query, $start_time, $end_time, 0, $limitnum);
+			
+			//Set Block content
+			while ($links = db_fetch_object($query_result)) {
+			    $block_content .= l($links->name, $links->jobdescription);
+			    $block_content .= "<br />";
+			}
+			
+			// Add a more link to our page that displays all the links 
+			$options = array( "attributes" => array("title" => t("More jobs") ) );
+			$link = l( t("More →"), "jobs", $options );
+			$block_content .= "<div class=\"more-link\">" . $link . "</div>";
+			
+			//Setup the block        
+			$blocks["subject"] = t("Jobs");
+			
+			//Check that content isn't empty
+			if ($block_content == "") {
+			    $block_content = t("Sorry No Content");            
+			}
+			        
+			$blocks["content"] = $block_content;
+			break;
+	}
+	return $blocks;
+}
+
+
+/**
+ * Show a list of all jobs on a single page
+ *
+ */
+function spider_all() {
+  
+  // Filter
+  //$page_content .= '<div id="spider-all">';
+
+
+  	$page_content .= '<div id="spider-all">';
+  	
+  	// Creating query
+  	$query = "SELECT name, jobdescription, wagefrom, wageto FROM {spider_joblist} ORDER BY updated DESC";
+  	
+  	$queryResult = pager_query($query, 5);
+  	//$queryResult =  db_query($query);
+  	while ($links = db_fetch_object($queryResult)) {
+  	  //Convert epoch linux time
+  		$dt = new DateTime("$links->updated");
+  		//Create wage string
+  		if ($links->wagefrom == 0 and $links->wageto == 0)
+  		  	$wage = t("Salary is negotiable");
+  		else if ($links->wagefrom == 0 and $links->wageto != 0)
+  		  	$wage = t("From $links->wageto");
+  		else if ($links->wagefrom != 0 and $links->wageto == 0)
+  		  	$wage = t("Up to $links->wagefrom");
+  		else
+  		  	$wage = t("From $links->wagefrom up to $links->wageto");
+  		
+  		$content = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+  		
+  		$page_content .= 
+  		  '<div class="spider-item">
+  		  	<div class="spider-item-title">' . l($links->name, $links->jobdescription) . '</div>
+  		  	<div class="spider-item-date">' . $dt->format('Y-m-d H:i:s') . '</div> - 
+  		  	<div class="spider-item-wage">' . $wage . '</div>
+  		  	<div class="spider-item-description">' . $content . '</div>
+  		  </div>';
+  	}
+  	
+  	$page_content .= "</div>"; // spider-all
+  	
+  	// Pagination
+  	$page_content .= theme('pager', NULL, 1);
+  	
+  	return $page_content;
+}
+
+
+/**
+ * Show a list of all jobs matching search request
+ *
+ */ 
+function spider_search($input) {
+	$page_content .= '<div id="spider-all">';
+
+	//$input = "Менеджер";
+	// Creating query
+	$query = "SELECT name, jobdescription FROM {spider_joblist} WHERE name LIKE '%$input%' OR jobdescription LIKE '%$input%' ORDER BY updated DESC";
+	
+	$queryResult = pager_query($query, 5);
+	//$queryResult =  db_query($query);
+	while ($links = db_fetch_object($queryResult)) {
+	  //Convert epoch linux time
+		$dt = new DateTime("$links->updated");
+		//Create wage string
+		if ($links->wagefrom == 0 and $links->wageto == 0)
+		  	$wage = t("Salary is negotiable");
+		else if ($links->wagefrom == 0 and $links->wageto != 0)
+		  	$wage = t("From $links->wageto");
+		else if ($links->wagefrom != 0 and $links->wageto == 0)
+		  	$wage = t("Up to $links->wagefrom");
+		else
+		  	$wage = t("From $links->wagefrom up to $links->wageto");
+		
+		$content = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+		
+		$page_content .= 
+		  '<div class="spider-item">
+		  	<div class="spider-item-title">' . l($links->name, $links->jobdescription) . '</div>
+		  	<div class="spider-item-date">' . $dt->format('Y-m-d H:i:s') . '</div> - 
+		  	<div class="spider-item-wage">' . $wage . '</div>
+		  	<div class="spider-item-description">' . $content . '</div>
+		  </div>';
+	}
+	
+	$page_content .= "</div>"; // spider-all
+	
+	// Pagination
+	$page_content .= theme('pager', NULL, 1);
+	
+	return $page_content;
+}
