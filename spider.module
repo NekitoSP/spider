@@ -2,7 +2,7 @@
 // $Id$
 /**
 * @file
-* Spider
+* The Spider searches for IT jobs, adds them to the database, and shows them on the site with neat statistic information for further analization.
 * @see http://ugatu.ac.ru
 */
 
