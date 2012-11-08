@@ -10,12 +10,12 @@ function spider_disable(){
 
 function spider_schema(){
 	$schema['spider_companies'] = array(
-		'description' => 'Companies list for HeadHunter spider.',
+		'description' => 'Companies list for spider module.',
 		'fields' => array(
 			'id' => array(
-				'type' => 'serial',
+				'type' => 'int',
 				'not null' => TRUE,
-				'description' => 'Primary Key: Unique comp ID.',
+				'description' => 'Primary Key: Unique company ID.',
 			),
 			'name' => array(
 				'type' => 'varchar',
@@ -53,26 +53,20 @@ function spider_schema(){
 		),
 		'primary key' => array('id')
 	);
-	
-	//TODO: add spider_joblist
-	/*
-	id,
-	name,
-	comp id,
-	update date,
-	z/p from
-	z/p to
-	z/p currency,
-	job description,
-	*/
-	
+
 	$schema['spider_joblist'] = array(
-		'description' => 'Job list for HeadHunter spider module',
+		'description' => 'Job list for spider module',
 		'fields' => array(
 			'id' => array(
-				'type' => 'serial',
+				'type' => 'int',
 				'not null' => TRUE,
 				'description' => 'Primary Key: Unique job ID.',
+			),
+			'parserid' => array(
+				'type' => 'varchar',
+				'length' => 10,
+				'not null' => TRUE,
+				'description' => 'Primary key: parser ID',
 			),
 			'name' => array(
 				'type' => 'varchar',
@@ -81,7 +75,7 @@ function spider_schema(){
 				'default' => '',
 				'description' => 'Job name',
 			),
-			'compid' => array(
+			'companyid' => array(
 				'type' => 'int',
 				'not null' => TRUE,
 				'description' => 'Comp. ID',
@@ -94,20 +88,18 @@ function spider_schema(){
 			),
 			'wagefrom' => array(
 				'type' => 'int',
-				'not null' => TRUE,
 				'default' => 0,
 				'description' => 'Wage from',
 			),
 			'wageto' => array(
 				'type' => 'int',
-				'not null' => TRUE,
 				'default' => 0,
 				'description' => 'Wage to',
 			),
 			'wagecurrency' => array(
-				'type' => 'int',
-				'not null' => TRUE,
-				'default' => 0,
+				'type' => 'varchar',
+				'length' => 10,
+				'default' => 'N/A',
 				'description' => 'Wage currency',
 			),
 			'jobdescription' => array(
@@ -117,9 +109,69 @@ function spider_schema(){
 				'description' => 'Job description',
 			),
 		),
-		'primary key' => array('id')
+		'primary key' => array('id', 'parserid')
+	);
+
+	$schema['spider_active_spiders'] => array (
+		'description' => 'Active spiders list',
+		'fields' => array (
+			'id' => array(
+				'type' => 'serial',
+				'not null' => TRUE
+				'unsigned' => TRUE,
+				'description' => 'Primary Key: autoincrement'
+			),
+			'spidername' => array(
+				'type' => 'varchar',
+				'size' => 5,
+				'default' => '',
+				'not null' => TRUE,
+			),
+			'spiderparams' => array(
+				'type' => 'varchar',
+				'size' => 255,
+				'default' => '',
+				'not null' => TRUE,
+			)
+		),
+		'primary key' => array('id');
 	);
 	return $schema;
+	/*
+	Текущие таблицы и поля:
+		1) spider_companies
+			* id		(int)
+			* name		(varchar)
+			* site		(varchar)
+			* logo		(varchar)
+			* about		(varchar big)
+			* jobscount (int) !!!unused, deleted!!!
+
+		2) spider_joblist
+			* id			(int)
+			* parserid		(int)
+			* name			(varchar)
+			* companyid		(int)
+			* updated		(int)
+			* wagefrom		(int)
+			* wageto		(int)
+			* wagecurrency	(varchar)
+			* jobdescription(varchar)
+			TODO:
+			* обязанности
+			* требования
+			* условия
+
+		3) spider_active_spiders
+			* id		(serial)
+			* spiderid	(varchar, 5)		- short spider name
+			* spiderparams (varchar, 255)	- parameters for spider
+
+		TODO:
+		3) spider_responsibilities	-	обязанности
+		4) spider_requirements		-	требования
+		5) spider_conditions		-	условия
+	*/
 }
 
 

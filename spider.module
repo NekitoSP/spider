@@ -248,3 +248,46 @@ function spider_search($input) {
 	
 	return $page_content;
 }
+
+/**
+ * Implementing cron
+ *
+ */
+function spider_cron(){
+	//spider_update_timeout - глобальная переменная, хранит время до следующего апдейта в секундах
+	//устанавливается в админке через variable_set('spider_update_timeout',$value);
+	//$timeToUpdate = variable_get('spider_update_timeout',900);
+	//15 min = 900 sec, но пока её нет - оставим 900 секунд (15 минут)
+	$timeToUpdate = 900;
+
+	$canCheck = (variable_get('spider_last_update',0) + $timeToUpdate) < time();
+	if ($canCheck){
+		//ВРЕМЯ ОБНОВЛЯТЬСЯ!
+		//здесь нужно вытащить из БД все парсеры
+		//затем создать их в зависимости от типа
+		$query = "SELECT spiderid, spiderparams FROM {spider_active_spiders}";
+		$queryResult = db_query($query);
+		while ($parser = db_fetch_object($queryResult)){
+			create_and_parse($parser->spiderid,$parser->spiderparams);
+		}
+	}
+}
+
+/**
+ * function for parse
+ *
+ */
+function create_and_parse($parsername='',$params=''){
+	switch($parsername){
+		case "hhunt"://head hunter parser
+			$parser = HHParser(json_decode($params));
+			break;
+		default:
+
+			break;
+	}
+
+	if(isset($parser)){
+		$parser->parse();
+	}
+}
