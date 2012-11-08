@@ -1,4 +1,4 @@
-<?php
+п»ї<?php
 
 function spider_enable() {
 	drupal_install_schema('spider');
@@ -138,7 +138,7 @@ function spider_schema(){
 	);
 	return $schema;
 	/*
-	Текущие таблицы и поля:
+	РўРµРєСѓС‰РёРµ С‚Р°Р±Р»РёС†С‹ Рё РїРѕР»СЏ:
 		1) spider_companies
 			* id		(int)
 			* name		(varchar)
@@ -158,9 +158,9 @@ function spider_schema(){
 			* wagecurrency	(varchar)
 			* jobdescription(varchar)
 			TODO:
-			* обязанности
-			* требования
-			* условия
+			* РѕР±СЏР·Р°РЅРЅРѕСЃС‚Рё
+			* С‚СЂРµР±РѕРІР°РЅРёСЏ
+			* СѓСЃР»РѕРІРёСЏ
 
 		3) spider_active_spiders
 			* id		(serial)
@@ -168,9 +168,9 @@ function spider_schema(){
 			* spiderparams (varchar, 255)	- parameters for spider
 
 		TODO:
-		3) spider_responsibilities	-	обязанности
-		4) spider_requirements		-	требования
-		5) spider_conditions		-	условия
+		3) spider_responsibilities	-	РѕР±СЏР·Р°РЅРЅРѕСЃС‚Рё
+		4) spider_requirements		-	С‚СЂРµР±РѕРІР°РЅРёСЏ
+		5) spider_conditions		-	СѓСЃР»РѕРІРёСЏ
 	*/
 }
 
