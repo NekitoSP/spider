@@ -59,9 +59,9 @@
 		}
 
 		public function parse(){
-			//качаем страничку с hh.ru, пока без пагинации, последние 1000 записей
+			//качаем страничку с hh.ru, пока без пагинации, последние 10 записей
 			if( $curl = curl_init() ) {
-				curl_setopt($curl, CURLOPT_URL, 'http://api.hh.ru/1/xml/vacancy/search/?region=$region&order=2&field=$professionalField&items=1000');
+				curl_setopt($curl, CURLOPT_URL, 'http://api.hh.ru/1/xml/vacancy/search/?region=$region&order=2&field=$professionalField&items=10');
 				curl_setopt($curl, CURLOPT_RETURNTRANSFER,true);
 				$out = curl_exec($curl);
 				//echo $out;
@@ -88,7 +88,7 @@
 				//скачаем описание вакансии
 				unset($out);
 				if( $curl = curl_init() ) {
-					curl_setopt($curl, CURLOPT_URL, 'http://api.hh.ru/1/xml/vacancy/'.$jID.'/');
+					curl_setopt($curl, CURLOPT_URL, 'http://api.hh.ru/1/xml/vacancy/'.$jobId.'/');
 					curl_setopt($curl, CURLOPT_RETURNTRANSFER,true);
 					$out = curl_exec($curl);
 					curl_close($curl);
@@ -98,12 +98,13 @@
 
 
 				//скачиваем страничку о компании, если надо
+				/*
 				if( $curl = curl_init() ) {
 					curl_setopt($curl, CURLOPT_URL, 'http://api.hh.ru/1/xml/vacancy/'.$jID.'/');
 					curl_setopt($curl, CURLOPT_RETURNTRANSFER,true);
 					$out = curl_exec($curl);
 					curl_close($curl);
-				}
+				}*/
 
 				$jobDescription = '';
 				if (isset($jobPage["children"]["description"][0]["text"])){
@@ -159,8 +160,11 @@
 				$retnArr[$k]["jobdescription"] = $jobDescription;
 				*/
 			}
+
 		}
 	}
+	
+	
 	//$p = new HHParser();
 	//$p->parse();
 
