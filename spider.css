@@ -43,3 +43,11 @@
 	display:block;
     overflow:hidden;
 }
+
+// Dumb fix <br /> codes in job descriptions
+br {
+	display: none;
+}
+p.spider-widget {
+	margin: 0;
+}
