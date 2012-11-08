@@ -6,6 +6,7 @@
 * @see http://ugatu.ac.ru
 */
 
+include("parser.php");
 
 //Implementation of hook_init()
 function spider_init() {
@@ -39,15 +40,19 @@ function spider_admin() {
     '#description' => t("The maximum number of links to display on the module page."),
     '#required' => TRUE,
   );
-  
-  
+    
+  $form['spider_update_button'] = array(
+    '#type' => 'submit',
+    '#submit' => array('spider_update'),
+    '#value' => t('Update'),
+  );
+
 
   return system_settings_form($form);
 }
 
 /**
  * Input values validation
- *
  */
 function spider_admin_validate($form, &$form_state) {
 	// for widget 
@@ -70,7 +75,6 @@ function spider_admin_validate($form, &$form_state) {
 
 /**
  * Telling Drupal about our new functions
- *
  */
 function spider_menu() {
   $items = array();
@@ -91,7 +95,7 @@ function spider_menu() {
     'type' => MENU_CALLBACK
   );
   // Page with search results
-   $items['jobs/search/'] = array(
+   $items['jobs/search'] = array(
     'title' => t("Job Search"),
     'page callback' => 'spider_search',
     'page arguments' => array(2),
@@ -131,8 +135,8 @@ function spider_block($op='list', $delta=0, $edit=array()) {
 			
 			//Set Block content
 			while ($links = db_fetch_object($query_result)) {
-			    $block_content .= l($links->name, $links->jobdescription);
-			    $block_content .= "<br />";
+			    $block_content .= '<p class="spider-widget">' . l($links->name, $links->jobdescription);
+			    $block_content .= "</p>";
 			}
 			
 			// Add a more link to our page that displays all the links 
@@ -157,13 +161,11 @@ function spider_block($op='list', $delta=0, $edit=array()) {
 
 /**
  * Show a list of all jobs on a single page
- *
  */
 function spider_all() {
   
   // Filter
   //$page_content .= '<div id="spider-all">';
-
 
   	$page_content .= '<div id="spider-all">';
   	
@@ -185,8 +187,8 @@ function spider_all() {
   		  	$wage = t("Up to $links->wagefrom");
   		else
   		  	$wage = t("From $links->wagefrom up to $links->wageto");
-  		
-  		$content = "<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p><p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>";
+  		// job entry description
+  		$content = "$links->jobdescription";
   		
   		$page_content .= 
   		  '<div class="spider-item">
@@ -208,7 +210,6 @@ function spider_all() {
 
 /**
  * Show a list of all jobs matching search request
- *
  */ 
 function spider_search($input="") {
 	
@@ -235,7 +236,8 @@ function spider_search($input="") {
 		else
 		  	$wage = t("From $links->wagefrom up to $links->wageto");
 		
-		$content = "<p>3333Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p><p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>";
+		// job entry description
+  		$content = "$links->jobdescription";
 		
 		$page_content .= 
 		  '<div class="spider-item">
@@ -256,9 +258,9 @@ function spider_search($input="") {
 
 /**
  * Implementing cron
- *
  */
 function spider_cron(){
+/*
 	//spider_update_timeout - глобальная переменная, хранит время до следующего апдейта в секундах
 	//устанавливается в админке через variable_set('spider_update_timeout',$value);
 	//$timeToUpdate = variable_get('spider_update_timeout',900);
@@ -276,11 +278,20 @@ function spider_cron(){
 			create_and_parse($parser->spiderid,$parser->spiderparams);
 		}
 	}
+	*/
+}
+
+/**
+ * Implementing update
+ */
+function spider_update(){
+	$params = "{'region' = '1347', 'field' = '1'}";
+	$parser = new HHParser(json_decode($params));
+	$parser->parse();
 }
 
 /**
  * function for parse
- *
  */
 function create_and_parse($parsername='',$params=''){
 	switch($parsername){
