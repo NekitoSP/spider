@@ -137,6 +137,7 @@ function spider_schema(){
 		'primary key' => array('id');
 	);
 	return $schema;
+
 	/*
 	Текущие таблицы и поля:
 		1) spider_companies
