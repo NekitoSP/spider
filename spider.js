@@ -1,5 +1,5 @@
 $(document).ready(function(){
-	var collapsedSize = '90px'; // how many pixs to show
+	var collapsedSize = '130px'; // how many pixs to show
 	$(".spider-item-description").each(function() {
 	    var h = this.scrollHeight;
 	    //console.log(h);
