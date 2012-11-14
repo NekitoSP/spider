@@ -44,7 +44,27 @@
     overflow:hidden;
 }
 
-// Dumb fix <br /> codes in job descriptions
+/* Search field */
+#command {
+	background: #fff;
+	color: #222;
+	width: 430px;
+	height: 28px;
+	margin-top: 20px;
+	padding: 4px 6px 5px 6px;
+	border: #bbb solid 1px;
+	font-size: 18px;
+	-moz-box-shadow:inset 1px 1px 2px #bababa;
+	-webkit-box-shadow:inset 1px 1px 2px #bababa;
+	box-shadow:inset 1px 1px 2px #bababa;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	-moz-border-radius: 3px;
+}
+
+
+/* Dumb fix <br /> codes in job descriptions */
 br {
 	display: none;
 }

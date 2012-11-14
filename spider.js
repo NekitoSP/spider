@@ -1,4 +1,7 @@
+
 $(document).ready(function(){
+
+	// Hide/Show for job descriptions
 	var collapsedSize = '130px'; // how many pixs to show
 	$(".spider-item-description").each(function() {
 	    var h = this.scrollHeight;
@@ -27,4 +30,25 @@ $(document).ready(function(){
 	        });
 	    }
 	});
+	
+	
+	// Parsing search text input and then redirecting
+	$('#command').keydown(function(e) {
+		if (e.which === 13) {
+			var str = $('#command').val();
+			
+			// Removing spaces and replacing them with dashes
+			var result = "";
+			for (var i = 0; i < str.length; i++) {
+				if (str.charAt(i) == " ") result += "-";
+				else result += str.charAt(i);
+			}
+			
+			// Building new URL
+			var location = document.URL + '/search/' + result;
+			window.location = location;
+		    
+		    return false;
+		}
+   });
 });

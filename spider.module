@@ -164,17 +164,21 @@ function spider_block($op='list', $delta=0, $edit=array()) {
  */
 function spider_all() {
   
-  // Filter
-  //$page_content .= '<div id="spider-all">';
-
-  	$page_content .= '<div id="spider-all">';
+	// Search field
+	$search_str = t("Type something and press Enter...");
+	$page_content .= '<form method="post" id="TEST"><input type="text" id="command" tabindex="1" placeholder="' . $search_str . '" ></form>';
+	
   	
-  	// Creating query
+  	// Creating a query
   	$query = "SELECT name, jobdescription, wagefrom, wageto FROM {spider_joblist} ORDER BY updated DESC";
   	
+  	
+  	// Start All Jobs page
+  	$page_content .= '<div id="spider-all">';
   	$limit = variable_get("spider_maxdisp_page", 5);
   	$queryResult = pager_query($query, $limit);
-  	//$queryResult =  db_query($query);
+  	
+  	// Iterate through job items
   	while ($links = db_fetch_object($queryResult)) {
   	  //Convert epoch linux time
   		$dt = new DateTime("$links->updated");
@@ -187,19 +191,18 @@ function spider_all() {
   		  	$wage = t("Up to $links->wagefrom");
   		else
   		  	$wage = t("From $links->wagefrom up to $links->wageto");
-  		// job entry description
-  		$content = "$links->jobdescription";
-  		
+
+  		// Adding a Job Item to page content
   		$page_content .= 
   		  '<div class="spider-item">
   		  	<div class="spider-item-title">' . l($links->name, $links->jobdescription) . '</div>
   		  	<div class="spider-item-date">' . $dt->format('Y-m-d H:i:s') . '</div> - 
   		  	<div class="spider-item-wage">' . $wage . '</div>
-  		  	<div class="spider-item-description">' . $content . '</div>
+  		  	<div class="spider-item-description">' . $links->jobdescription . '</div>
   		  </div>';
   	}
   	
-  	$page_content .= "</div>"; // spider-all
+  	$page_content .= "</div>"; // spider-all end
   	
   	// Pagination
   	$page_content .= theme('pager', NULL, 1);
@@ -213,20 +216,32 @@ function spider_all() {
  */ 
 function spider_search($input="") {
 	
+	// If input is empty, return a list of all jobs
 	if(!isset($input))
 		return spider_all();
 
-	$page_content .= '<div id="spider-all">';
-
-	// Creating query
-	$query = "SELECT name, jobdescription FROM {spider_joblist} WHERE name LIKE '%$input%' OR jobdescription LIKE '%$input%' ORDER BY updated DESC";
 	
+	// Parsing input string: removing dashes and splitting words out
+	$keywords = explode("-", $input);
+
+	// Creating a query with the first keyword from keywords array
+	$query = "SELECT name, jobdescription FROM {spider_joblist} WHERE name LIKE '%$keywords[0]%' OR jobdescription LIKE '%$keywords[0]%'";
+	// Running through other keywords to build the query
+	for ($i=1; $i<count($keywords); $i++)
+		$query .= " OR name LIKE '%$keywords[$i]%' OR jobdescription LIKE '%$keywords[$i]%'";
+	// Closing the query
+	$query .= " ORDER BY updated DESC";
+	
+	
+	// Start All Jobs page
+	$page_content .= '<div id="spider-all">';
 	$queryResult = pager_query($query, 5);
-	//$queryResult =  db_query($query);
+	
+	// Iterate through job items
 	while ($links = db_fetch_object($queryResult)) {
-	  //Convert epoch linux time
+	  	// Convert epoch linux time
 		$dt = new DateTime("$links->updated");
-		//Create wage string
+		// Create wage string
 		if ($links->wagefrom == 0 and $links->wageto == 0)
 		  	$wage = t("Salary is negotiable");
 		else if ($links->wagefrom == 0 and $links->wageto != 0)
@@ -236,19 +251,17 @@ function spider_search($input="") {
 		else
 		  	$wage = t("From $links->wagefrom up to $links->wageto");
 		
-		// job entry description
-  		$content = "$links->jobdescription";
-		
+		// Adding a Job Item to page content
 		$page_content .= 
 		  '<div class="spider-item">
 		  	<div class="spider-item-title">' . l($links->name, $links->jobdescription) . '</div>
 		  	<div class="spider-item-date">' . $dt->format('Y-m-d H:i:s') . '</div> - 
 		  	<div class="spider-item-wage">' . $wage . '</div>
-		  	<div class="spider-item-description">' . $content . '</div>
+		  	<div class="spider-item-description">' . $links->jobdescription . '</div>
 		  </div>';
 	}
 	
-	$page_content .= "</div>"; // spider-all
+	$page_content .= "</div>"; // spider-all end
 	
 	// Pagination
 	$page_content .= theme('pager', NULL, 1);
