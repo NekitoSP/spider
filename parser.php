@@ -59,7 +59,8 @@
 		}
 
 		public function parse(){
-			//качаем страничку с hh.ru, пока без пагинации, последние 10 записей
+			$spiderName = "hhunt";
+			//качаем страничку с hh.ru, пока без пагинации, последние 1000 записей
 			if( $curl = curl_init() ) {
 				curl_setopt($curl, CURLOPT_URL, 'http://api.hh.ru/1/xml/vacancy/search/?region=$region&order=2&field=$professionalField&items=10');
 				curl_setopt($curl, CURLOPT_RETURNTRANSFER,true);
@@ -96,16 +97,6 @@
 				$doc = new SimpleXMLElement($out);
 				$jobPage = parent::xmlObjToArr($doc);
 
-
-				//скачиваем страничку о компании, если надо
-				/*
-				if( $curl = curl_init() ) {
-					curl_setopt($curl, CURLOPT_URL, 'http://api.hh.ru/1/xml/vacancy/'.$jID.'/');
-					curl_setopt($curl, CURLOPT_RETURNTRANSFER,true);
-					$out = curl_exec($curl);
-					curl_close($curl);
-				}*/
-
 				$jobDescription = '';
 				if (isset($jobPage["children"]["description"][0]["text"])){
 					$jobDescription = $jobPage["children"]["description"][0]["text"];
@@ -136,13 +127,49 @@
 					$jobWageCurrency = $val["children"]["salary"][0]["children"]["currency"][0]["text"];
 				}
 
+				//проверить наличие данной компании в таблице компаний, иначе - распарсим и добавим
+				$companyExists = db_fetch_array(db_query("SELECT * FROM {spider_companies} WHERE id=%d",$jobCompanyId));
+				//echo $companyExists;
+				if($companyExists == FALSE){
+					if( $curl = curl_init() ) {
+						curl_setopt($curl, CURLOPT_URL, 'http://api.hh.ru/1/xml/employer/'.$jobCompanyId.'/');
+						curl_setopt($curl, CURLOPT_RETURNTRANSFER,true);
+						$outCompany = curl_exec($curl);
+						curl_close($curl);
+					}
+					$doc = new SimpleXMLElement($outCompany);
+					$companyPage = parent::xmlObjToArr($doc);
+
+					$companyName = "";
+					if(isset($companyPage["children"]["name"][0]["text"])){
+						$companyName = $companyPage["children"]["name"][0]["text"];
+					}
+
+					$companyLogo = "";
+					if(isset($companyPage["children"]["logos"][0]["children"]["link"][1]["attributes"]["href"])){
+						$companyLogo = $companyPage["children"]["logos"][0]["children"]["link"][1]["attributes"]["href"];
+					}
+
+					$companyUrl = "";
+					if(isset($companyPage["children"]["link"][2]["attributes"]["href"])){
+						$companyUrl = $companyPage["children"]["link"][2]["attributes"]["href"];
+					}
+
+					$companyDescription = "";
+					if(isset($companyPage["children"]["full-description"][0]["text"])){
+						$companyDescription = $companyPage["children"]["full-description"][0]["text"];
+					}
+					//добавим работодателя в базу
+					db_query("INSERT INTO {spider_companies} (`id`, `name`, `site`, `logo`, `about`) VALUES (%d, '%s','%s','%s','%s');",$jobCompanyId, $companyName, $companyUrl, $companyLogo, $companyDescription);
+				}
+
 				//вакансия "свежа", добавим в базу или обновим если есть
 				if (!isset($accLast["updated"]) || $accLast["updated"]<$jobLastUpdateTime){
 					$res = db_query('SELECT * FROM {spider_joblist} WHERE id = %d',$jobId);
 					$arr = db_fetch_array($res);
 					//if not exist = INSERT NEW, else = update existing
 					if ($arr == FALSE){
-						db_query('INSERT INTO {spider_joblist} (`id`, `name`, `compid`, `updated`, `wagefrom`, `wageto`, `wagecurrency`, `jobdescription`) VALUES (%d, \'%s\', %d, %d, %d, %d, \'%s\', \'%s\');',$jobId, $jobCaption, $jobCompanyId, $jobLastUpdateTime, $jobWageFrom, $jobWageTo, $jobWageCurrency, $jobDescription);
+						db_query("INSERT INTO {spider_joblist} (`id`, `spidername`,`name`, `companyid`, `updated`, `wagefrom`, `wageto`, `wagecurrency`, `jobdescription`) VALUES (%d, '%s', '%s', %d, %d, %d, %d, '%s', '%s');",$jobId, $spiderName,$jobCaption, $jobCompanyId, $jobLastUpdateTime, $jobWageFrom, $jobWageTo, $jobWageCurrency, $jobDescription);
 					} else {
 						db_query("UPDATE {spider_joblist} SET `name`='$jobCaption', `compid`='$jobCompanyId', `updated`='$jobLastUpdateTime', `wagefrom`='$jobWageFrom', `wageto`='$jobWageTo', `wagecurrency`='$jobWageCurrency', `jobdescription`='$jobDescription' WHERE `id`='$jobId' ");
 					}
@@ -160,16 +187,13 @@
 				$retnArr[$k]["jobdescription"] = $jobDescription;
 				*/
 			}
-
 		}
 	}
-	
-	
-	//$p = new HHParser();
-	//$p->parse();
+	//$params = "{'region' = '1347', 'field' = '1'}";
+	//$parser = new HHParser(json_decode($params));
+	//$parser->parse();
 
 	/*
 	TODO:
 		функция для получения параметров и их читабельных вариантов каждого парсера
 	*/
-?>

@@ -62,9 +62,9 @@ function spider_schema(){
 				'not null' => TRUE,
 				'description' => 'Primary Key: Unique job ID.',
 			),
-			'parserid' => array(
+			'spidername' => array(
 				'type' => 'varchar',
-				'length' => 10,
+				'length' => 5,
 				'not null' => TRUE,
 				'description' => 'Primary key: parser ID',
 			),
@@ -109,7 +109,7 @@ function spider_schema(){
 				'description' => 'Job description',
 			),
 		),
-		'primary key' => array('id', 'parserid')
+		'primary key' => array('id', 'spidername')
 	);
 
 	$schema['spider_active_spiders'] = array (
@@ -121,15 +121,21 @@ function spider_schema(){
 				'unsigned' => TRUE,
 				'description' => 'Primary Key: autoincrement'
 			),
+			'spiderdescription' => array(
+				'type' => 'varchar',
+				'length' => 255,
+				'default' => 'N/A',
+				'not null' => TRUE
+			),
 			'spidername' => array(
 				'type' => 'varchar',
-				'size' => 5,
+				'length' => 5,
 				'default' => '',
 				'not null' => TRUE,
 			),
 			'spiderparams' => array(
 				'type' => 'varchar',
-				'size' => 255,
+				'length' => 255,
 				'default' => '',
 				'not null' => TRUE,
 			)
@@ -150,7 +156,7 @@ function spider_schema(){
 
 		2) spider_joblist
 			* id			(int)
-			* parserid		(int)
+			* spidername	(int)
 			* name			(varchar)
 			* companyid		(int)
 			* updated		(int)
@@ -165,8 +171,9 @@ function spider_schema(){
 
 		3) spider_active_spiders
 			* id		(serial)
-			* spiderid	(varchar, 5)		- short spider name
-			* spiderparams (varchar, 255)	- parameters for spider
+			* spiderdescription	(varchar, 255)	- short description for spider
+			* spidername	(varchar, 5)			- short spider name(hhunt,etc..) == spidername from {spider_joblist} table
+			* spiderparams (varchar, 255)		- parameters for spider
 
 		TODO:
 		3) spider_responsibilities	-	обязанности
