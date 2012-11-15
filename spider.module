@@ -130,12 +130,12 @@ function spider_block($op='list', $delta=0, $edit=array()) {
 			$limitnum = variable_get("spider_maxdisp", 3);
 			
 			//Get nodes in range
-			$query = "SELECT name, jobdescription FROM {spider_joblist} ORDER BY updated DESC";
+			$query = "SELECT name, id FROM {spider_joblist} ORDER BY updated DESC";
 			$query_result = db_query_range($query, $start_time, $end_time, 0, $limitnum);
 			
 			//Set Block content
 			while ($links = db_fetch_object($query_result)) {
-			    $block_content .= '<p class="spider-widget">' . l($links->name, $links->jobdescription);
+			    $block_content .= '<p class="spider-widget">' . l($links->name, "http://hh.ru/vacancy/" . $links->id);
 			    $block_content .= "</p>";
 			}
 			
@@ -170,7 +170,7 @@ function spider_all() {
 	
   	
   	// Creating a query
-  	$query = "SELECT name, jobdescription, wagefrom, wageto FROM {spider_joblist} ORDER BY updated DESC";
+	$query = "SELECT name, jobdescription, wagefrom, wageto, id FROM {spider_joblist} ORDER BY updated DESC";
   	
   	
   	// Start All Jobs page
@@ -195,7 +195,7 @@ function spider_all() {
   		// Adding a Job Item to page content
   		$page_content .= 
   		  '<div class="spider-item">
-  		  	<div class="spider-item-title">' . l($links->name, $links->jobdescription) . '</div>
+			<div class="spider-item-title">' . l($links->name, "http://hh.ru/vacancy/" . $links->id) . '</div>
   		  	<div class="spider-item-date">' . $dt->format('Y-m-d H:i:s') . '</div> - 
   		  	<div class="spider-item-wage">' . $wage . '</div>
   		  	<div class="spider-item-description">' . $links->jobdescription . '</div>
@@ -225,7 +225,7 @@ function spider_search($input="") {
 	$keywords = explode("-", $input);
 
 	// Creating a query with the first keyword from keywords array
-	$query = "SELECT name, jobdescription FROM {spider_joblist} WHERE name LIKE '%$keywords[0]%' OR jobdescription LIKE '%$keywords[0]%'";
+	$query = "SELECT name, jobdescription, id FROM {spider_joblist} WHERE name LIKE '%$keywords[0]%' OR jobdescription LIKE '%$keywords[0]%'";
 	// Running through other keywords to build the query
 	for ($i=1; $i<count($keywords); $i++)
 		$query .= " OR name LIKE '%$keywords[$i]%' OR jobdescription LIKE '%$keywords[$i]%'";
@@ -254,7 +254,7 @@ function spider_search($input="") {
 		// Adding a Job Item to page content
 		$page_content .= 
 		  '<div class="spider-item">
-		  	<div class="spider-item-title">' . l($links->name, $links->jobdescription) . '</div>
+			<div class="spider-item-title">' . l($links->name, "http://hh.ru/vacancy/" . $links->id) . '</div>
 		  	<div class="spider-item-date">' . $dt->format('Y-m-d H:i:s') . '</div> - 
 		  	<div class="spider-item-wage">' . $wage . '</div>
 		  	<div class="spider-item-description">' . $links->jobdescription . '</div>
