@@ -2,7 +2,7 @@
 	margin-top: 20px;
 }
 
-.spider-item {
+.spider-item, .spider-company {
 	background-color: #fff;
 	padding: 12px 10px;
 	margin-bottom: 13px;
@@ -25,18 +25,16 @@
 
 }
 
-.spider-item-date {
+.spider-item-date, .spider-item-wage, .spider-item-company {
 	color: #999;
 	font-size: 11px;
 	display: inline;
 	margin-right: 5px;
+	margin-left: 5px;
 }
 
-.spider-item-wage {
-	color: #999;
-	font-size: 11px;
-	display: inline;	
-	margin-left: 5px;
+.spider-item-company a {
+	color: #999 !important;
 }
 
 .spider-item-description {
@@ -63,6 +61,25 @@
 	-moz-border-radius: 3px;
 }
 
+
+/* Company Page */
+.spider-company {
+	margin-top: 20px;
+}
+
+.spider-company-title h2 {
+	font-size: 25px;
+}
+
+.spider-company-logo {
+	float: right;
+	padding: 12px 10px 15px 20px;
+}
+
+h2.spider-jobs-list {
+	margin-top: 40px;
+	margin-bottom: 10px;	
+}
 
 /* Dumb fix <br /> codes in job descriptions */
 br {

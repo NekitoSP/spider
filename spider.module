@@ -102,6 +102,14 @@ function spider_menu() {
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK
   );
+  // Company Page
+   $items['jobs/company'] = array(
+    'title' => t("Company Page"),
+    'page callback' => 'spider_company',
+    'page arguments' => array(2),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK
+  );
 
   return $items;
 }
@@ -170,7 +178,7 @@ function spider_all() {
 	
   	
   	// Creating a query
-	$query = "SELECT name, jobdescription, wagefrom, wageto, id FROM {spider_joblist} ORDER BY updated DESC";
+	$query = "SELECT name, jobdescription, wagefrom, wageto, wagecurrency, companyid, id FROM {spider_joblist} ORDER BY updated DESC";
   	
   	
   	// Start All Jobs page
@@ -191,13 +199,23 @@ function spider_all() {
   		  	$wage = t("Up to $links->wagefrom");
   		else
   		  	$wage = t("From $links->wagefrom up to $links->wageto");
+  		  	
+  		// Get currency
+  		if ($links->wagecurrency != "N/A")
+  			$wage .= ' ' . $links->wagecurrency;
+  		  	
+  		// Get Company for the Job Item
+  		$query_company = "SELECT id, name FROM {spider_companies} WHERE id LIKE '%$links->companyid%'";
+  		$query_company_res = db_query($query_company);
+  		$company = db_fetch_object($query_company_res);
 
   		// Adding a Job Item to page content
   		$page_content .= 
   		  '<div class="spider-item">
 			<div class="spider-item-title">' . l($links->name, "http://hh.ru/vacancy/" . $links->id) . '</div>
   		  	<div class="spider-item-date">' . $dt->format('Y-m-d H:i:s') . '</div> - 
-  		  	<div class="spider-item-wage">' . $wage . '</div>
+  		  	<div class="spider-item-wage">' . $wage . '</div> - 
+  		  	<div class="spider-item-company">' . l($company->name, 'jobs/company/' . $company->id) . '</div>
   		  	<div class="spider-item-description">' . $links->jobdescription . '</div>
   		  </div>';
   	}
@@ -250,6 +268,10 @@ function spider_search($input="") {
 		  	$wage = t("Up to $links->wagefrom");
 		else
 		  	$wage = t("From $links->wagefrom up to $links->wageto");
+		  	
+		// Get currency
+  		if ($links->wagecurrency != "N/A")
+  			$wage .= ' ' . $links->wagecurrency;
 		
 		// Adding a Job Item to page content
 		$page_content .= 
@@ -268,6 +290,80 @@ function spider_search($input="") {
 	
 	return $page_content;
 }
+
+
+/**
+ * Show a list of all jobs matching search request
+ */ 
+function spider_company($input="") {
+	
+	// Parsing input string: removing dashes and splitting words out
+	$keywords = explode("-", $input);
+
+	// Creating a query with the first keyword from keywords array
+	$query = "SELECT id, name, site, logo, about FROM {spider_companies} WHERE id LIKE '%$keywords[0]%'";
+	// Running through other keywords to build the query
+	for ($i=1; $i<count($keywords); $i++)
+		$query .= " OR name LIKE '%$keywords[$i]%'";
+	
+	// Start All Jobs page
+
+	$queryResult = pager_query($query, 1);
+	
+	// Create company representation
+	$company = db_fetch_object($queryResult); 
+	  	
+	// Adding a company to page content
+	$page_content .= 
+	  '<div class="spider-company">
+	    <div class="spider-company-title"><h2>' . l($company->name, $company->site) . '</h2></div>
+	    <div class="spider-company-logo"><img src="' . $company->logo . '"></div>
+	  	<div class="spider-company-description">' . $company->about . '</div>
+	  </div>';
+	
+	
+	$page_content .= '<h2 class="spider-jobs-list" >' . t("Latest Jobs") . '</h2>';
+	// Creating a query for all the jobs at this company
+	$queryForJobs = "SELECT name, jobdescription, companyid, updated, wagecurrency, wagefrom, wageto FROM {spider_joblist} WHERE companyid LIKE '%$company->id%'";
+	
+	$queryForJobsResult = pager_query($queryForJobs, 5);
+	
+	// Iterate through job items
+	while ($items = db_fetch_object($queryForJobsResult)) {
+	  	// Convert epoch linux time
+		$dt = new DateTime("$items->updated");
+		// Create wage string
+		if ($items->wagefrom == 0 and $items->wageto == 0)
+		  	$wage = t("Salary is negotiable");
+		else if ($items->wagefrom == 0 and $items->wageto != 0)
+		  	$wage = t("From $items->wageto");
+		else if ($items->wagefrom != 0 and $items->wageto == 0)
+		  	$wage = t("Up to $items->wagefrom");
+		else
+		  	$wage = t("From $items->wagefrom up to $items->wageto");
+		
+		// Get currency
+  		if ($links->wagecurrency != "N/A")
+  			$wage .= ' ' . $links->wagecurrency;
+		
+		// Adding a Job Item to page content
+		$page_content .= 
+		  '<div class="spider-item">
+			<div class="spider-item-title">' . l($items->name, "http://hh.ru/vacancy/" . $items->id) . '</div>
+		  	<div class="spider-item-date">' . $dt->format('Y-m-d H:i:s') . '</div> - 
+		  	<div class="spider-item-wage">' . $wage . '</div>
+		  	<div class="spider-item-description">' . $items->jobdescription . '</div>
+		  </div>';
+	}
+	
+	
+	// Pagination
+	$page_content .= theme('pager', NULL, 1);
+	
+	return $page_content;
+
+}
+
 
 /**
  * Implementing cron
