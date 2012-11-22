@@ -45,8 +45,10 @@ $(document).ready(function(){
 			}
 			
 			// Building new URL
-			var location = document.URL + '/search/' + result;
-			window.location = location;
+			var url = document.URL;
+			var location = url.split('?');
+			var url = location[0] + '/search/' + result;
+			window.location = url;
 		    
 		    return false;
 		}
