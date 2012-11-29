@@ -1,7 +1,27 @@
 ﻿<?php
 	abstract class SiteParser {
 		abstract protected function parse(); // for parse
-
+		
+		public function parseEng($strDesc){
+			$strDesc2 = strip_tags($strDesc);
+			$strDesc2 = str_replace("\r", ' ', $strDesc2);
+			$strDesc2 = str_replace("\n", ' ', $strDesc2);
+			$strDesc2 = str_replace("\t", ' ', $strDesc2);
+			$strDesc2 = preg_replace("/\&(.{0,10})\;/i",'',$strDesc2);
+			$strDesc2 = preg_replace("/[^a-zA-Z\d\"\#\№\%\:\?\*\(\)\_\-\+\=\+]/i",' ',$strDesc2);
+			$strArr = explode(" ",$strDesc2);
+			$i = 0;
+			while($i<count($strArr)){
+				if(strlen($strArr[$i])>2){
+					$i += 1;
+				} else {
+					array_splice($strArr,$i,1);
+					//echo count($strDesc)."\n";
+				}
+			}
+			return $strArr;
+		}
+		
 		public function xmlObjToArr($obj) { 
 			$namespace = $obj->getDocNamespaces(true); 
 			$namespace[NULL] = NULL; 
@@ -59,10 +79,11 @@
 		}
 
 		public function parse(){
+			$fp = fopen('spiderdump.txt', 'a+'); // Текстовый режим
 			$spiderName = "hhunt";
 			//качаем страничку с hh.ru, пока без пагинации, последние 1000 записей
 			if( $curl = curl_init() ) {
-				curl_setopt($curl, CURLOPT_URL, 'http://api.hh.ru/1/xml/vacancy/search/?region=$region&order=2&field=$professionalField&items=10');
+				curl_setopt($curl, CURLOPT_URL, 'http://api.hh.ru/1/xml/vacancy/search/?region=$region&order=2&field=$professionalField&items=3');
 				curl_setopt($curl, CURLOPT_RETURNTRANSFER,true);
 				$out = curl_exec($curl);
 				//echo $out;
@@ -163,6 +184,11 @@
 					db_query("INSERT INTO {spider_companies} (`id`, `name`, `site`, `logo`, `about`) VALUES (%d, '%s','%s','%s','%s');",$jobCompanyId, $companyName, $companyUrl, $companyLogo, $companyDescription);
 				}
 
+				$engKeywords = parent::parseEng($jobDescription);
+				fwrite($fp,"DUMP OF $jobId :\n");
+				fwrite($fp, print_r($engKeywords,true));
+				fwrite($fp,"\n");
+
 				//вакансия "свежа", добавим в базу или обновим если есть
 				if (!isset($accLast["updated"]) || $accLast["updated"]<$jobLastUpdateTime){
 					$res = db_query('SELECT * FROM {spider_joblist} WHERE id = %d',$jobId);
@@ -171,8 +197,31 @@
 					if ($arr == FALSE){
 						db_query("INSERT INTO {spider_joblist} (`id`, `spidername`,`name`, `companyid`, `updated`, `wagefrom`, `wageto`, `wagecurrency`, `jobdescription`) VALUES (%d, '%s', '%s', %d, %d, %d, %d, '%s', '%s');",$jobId, $spiderName,$jobCaption, $jobCompanyId, $jobLastUpdateTime, $jobWageFrom, $jobWageTo, $jobWageCurrency, $jobDescription);
 					} else {
-						db_query("UPDATE {spider_joblist} SET `name`='$jobCaption', `compid`='$jobCompanyId', `updated`='$jobLastUpdateTime', `wagefrom`='$jobWageFrom', `wageto`='$jobWageTo', `wagecurrency`='$jobWageCurrency', `jobdescription`='$jobDescription' WHERE `id`='$jobId' ");
+						db_query("UPDATE {spider_joblist} SET `name`='$jobCaption', `companyid`='$jobCompanyId', `updated`='$jobLastUpdateTime', `wagefrom`='$jobWageFrom', `wageto`='$jobWageTo', `wagecurrency`='$jobWageCurrency', `jobdescription`='$jobDescription' WHERE `id`='$jobId' ");
 					}
+					
+					for($i = 0; $i<count($engKeywords);$i++){
+						$keyword = $engKeywords[$i];
+						$res = db_query("SELECT * FROM {portfolio_means} WHERE name = '%s'",$keyword);
+						$arr = db_fetch_array($res);
+						if($arr == FALSE){
+							$insertQuery = "INSERT INTO {portfolio_means} (`type`,`name`) VALUES(0,'%s')";
+							db_query($insertQuery,$keyword);
+						}
+					}
+
+					db_query("DELETE FROM {spider_relation} WHERE jobid = %d",$jobId);
+					$insQuery = "INSERT INTO {spider_relation} (`jobid`,`meanid`) VALUES ";
+					for($i = 0; $i<count($engKeywords);$i++){
+						$q = db_query("SELECT id FROM {portfolio_means} WHERE name = '%s'",$engKeywords[$i]);
+						$tag = db_fetch_object($q);
+						if ($i>0)
+							$insQuery .= ",";
+						$insQuery .= " (".$jobId.",".$tag->id.")";
+					}
+					if(count($engKeywords)>0)
+						db_query($insQuery);//вставляем отношения в таблицу
+					
 				}
 
 				//var_dump($accLast["updated"]);
@@ -187,6 +236,7 @@
 				$retnArr[$k]["jobdescription"] = $jobDescription;
 				*/
 			}
+			fclose($fp);
 		}
 	}
 	//$params = "{'region' = '1347', 'field' = '1'}";

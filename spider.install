@@ -142,6 +142,22 @@ function spider_schema(){
 		),
 		'primary key' => array('id')
 	);
+	$schema['spider_relation'] = array(
+		'description' => 'Relations between tags and joblist',
+		'fields' => array(
+			'jobid' => array(
+				'type' => 'int',
+				'default' => 0,
+				'description' => 'ID from spider_joblist',
+			),
+			'meanid' => array(
+				'type' => 'int',
+				'default' => 0,
+				'description' => 'ID from portfolio_means',
+			),
+		),
+		'primary key' => array ('jobid','meanid')
+	);
 	return $schema;
 
 	/*
