@@ -178,7 +178,7 @@ function spider_all() {
 	
   	
   	// Creating a query
-	$query = "SELECT name, jobdescription, wagefrom, wageto, wagecurrency, companyid, id FROM {spider_joblist} ORDER BY updated DESC";
+	$query = "SELECT name, jobdescription, wagefrom, wageto, wagecurrency, companyid, id, updated FROM {spider_joblist} ORDER BY updated DESC";
   	
   	
   	// Start All Jobs page
@@ -189,7 +189,7 @@ function spider_all() {
   	// Iterate through job items
   	while ($items = db_fetch_object($queryResult)) {
   	  	//Convert epoch linux time
-  		$dt = new DateTime($items->updated);
+  		$dt = $items->updated;
   		//Create wage string
   		if ($items->wagefrom == 0 and $items->wageto == 0)
   		  	$wage = t("Salary is negotiable");
@@ -213,7 +213,7 @@ function spider_all() {
   		$page_content .= 
   		  '<div class="spider-item">
 			<div class="spider-item-title">' . l($items->name, "http://hh.ru/vacancy/" . $items->id) . '</div>
-  		  	<div class="spider-item-date">' . $dt->format('Y-m-d H:i:s') . '</div> - 
+  		  	<div class="spider-item-date">' . date("d.m.y g:i A", $dt) . '</div> - 
   		  	<div class="spider-item-wage">' . $wage . '</div> - 
   		  	<div class="spider-item-company">' . l($company->name, 'jobs/company/' . $company->id) . '</div>
   		  	<div class="spider-item-description">' . $items->jobdescription . '</div>
@@ -243,7 +243,7 @@ function spider_search($input="") {
 	$keywords = explode("-", $input);
 
 	// Creating a query with the first keyword from keywords array
-	$query = "SELECT name, jobdescription, id FROM {spider_joblist} WHERE name LIKE '%$keywords[0]%' OR jobdescription LIKE '%$keywords[0]%'";
+	$query = "SELECT name, jobdescription, id, updated FROM {spider_joblist} WHERE name LIKE '%$keywords[0]%' OR jobdescription LIKE '%$keywords[0]%'";
 	// Running through other keywords to build the query
 	for ($i=1; $i<count($keywords); $i++)
 		$query .= " OR name LIKE '%$keywords[$i]%' OR jobdescription LIKE '%$keywords[$i]%'";
@@ -258,7 +258,7 @@ function spider_search($input="") {
 	// Iterate through job items
 	while ($items = db_fetch_object($queryResult)) {
 	  	// Convert epoch linux time
-		$dt = new DateTime("$items->updated");
+		$dt = $items->updated;
 		// Create wage string
 		if ($items->wagefrom == 0 and $items->wageto == 0)
 		  	$wage = t("Salary is negotiable");
@@ -277,14 +277,15 @@ function spider_search($input="") {
 		$page_content .= 
 		  '<div class="spider-item">
 			<div class="spider-item-title">' . l($items->name, "http://hh.ru/vacancy/" . $items->id) . '</div>
-		  	<div class="spider-item-date">' . $dt->format('Y-m-d H:i:s') . '</div> - 
+		  	<div class="spider-item-date">' . date("d.m.y g:i A", $dt) . '</div> - 
 		  	<div class="spider-item-wage">' . $wage . '</div>
 		  	<div class="spider-item-description">' . $items->jobdescription . '</div>
 		  </div>';
 	}
 	
 	// If no jobs found
-	$page_content .= t("Sorry, no jobs found.");
+	if ($page_content == '<div id="spider-all">')
+		$page_content .= t("Sorry, no jobs found.");
 	
 	$page_content .= "</div>"; // spider-all end
 	
@@ -327,14 +328,15 @@ function spider_company($input="") {
 	
 	$page_content .= '<h2 class="spider-jobs-list" >' . t("Latest Jobs") . '</h2>';
 	// Creating a query for all the jobs at this company
-	$queryForJobs = "SELECT name, jobdescription, companyid, updated, wagecurrency, wagefrom, wageto FROM {spider_joblist} WHERE companyid LIKE '%$company->id%'";
+	$queryForJobs = "SELECT name, jobdescription, companyid, updated, wagecurrency, wagefrom, wageto, updated FROM {spider_joblist} WHERE companyid LIKE '%$company->id%'";
 	
 	$queryForJobsResult = pager_query($queryForJobs, 5);
 	
 	// Iterate through job items
 	while ($items = db_fetch_object($queryForJobsResult)) {
 	  	// Convert epoch linux time
-		$dt = new DateTime("$items->updated");
+		//$dt = new DateTime('$items->updated');
+		$dt = $items->updated;
 		// Create wage string
 		if ($items->wagefrom == 0 and $items->wageto == 0)
 		  	$wage = t("Salary is negotiable");
@@ -353,7 +355,7 @@ function spider_company($input="") {
 		$page_content .= 
 		  '<div class="spider-item">
 			<div class="spider-item-title">' . l($items->name, "http://hh.ru/vacancy/" . $items->id) . '</div>
-		  	<div class="spider-item-date">' . $dt->format('Y-m-d H:i:s') . '</div> - 
+		  	<div class="spider-item-date">' . date("d.m.y g:i A", $dt) . '</div> - 
 		  	<div class="spider-item-wage">' . $wage . '</div>
 		  	<div class="spider-item-description">' . $items->jobdescription . '</div>
 		  </div>';
