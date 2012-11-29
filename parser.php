@@ -12,11 +12,16 @@
 			$strArr = explode(" ",$strDesc2);
 			$i = 0;
 			while($i<count($strArr)){
-				if(strlen($strArr[$i])>2){
-					$i += 1;
-				} else {
+				$canSplice = FALSE;
+				if(strlen($strArr[$i])<=2)
+					$canSplice = TRUE;
+				if(strlen(preg_replace("/\d/i",'',$strDesc2)))
+					$canSplice = TRUE;
+				
+				if($canSplice){				
 					array_splice($strArr,$i,1);
-					//echo count($strDesc)."\n";
+				} else {
+					$i += 1;
 				}
 			}
 			return $strArr;
@@ -79,7 +84,7 @@
 		}
 
 		public function parse(){
-			$fp = fopen('spiderdump.txt', 'a+'); // Текстовый режим
+			//$fp = fopen('spiderdump.txt', 'a+'); // Текстовый режим
 			$spiderName = "hhunt";
 			//качаем страничку с hh.ru, пока без пагинации, последние 1000 записей
 			if( $curl = curl_init() ) {
@@ -185,9 +190,9 @@
 				}
 
 				$engKeywords = parent::parseEng($jobDescription);
-				fwrite($fp,"DUMP OF $jobId :\n");
-				fwrite($fp, print_r($engKeywords,true));
-				fwrite($fp,"\n");
+				//fwrite($fp,"DUMP OF $jobId :\n");
+				//fwrite($fp, print_r($engKeywords,true));
+				//fwrite($fp,"\n");
 
 				//вакансия "свежа", добавим в базу или обновим если есть
 				if (!isset($accLast["updated"]) || $accLast["updated"]<$jobLastUpdateTime){
@@ -236,7 +241,7 @@
 				$retnArr[$k]["jobdescription"] = $jobDescription;
 				*/
 			}
-			fclose($fp);
+			//fclose($fp);
 		}
 	}
 	//$params = "{'region' = '1347', 'field' = '1'}";
