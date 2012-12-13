@@ -2,28 +2,24 @@
 	abstract class SiteParser {
 		abstract protected function parse(); // for parse
 		
-		public function parseEng($strDesc){
-			$strDesc2 = strip_tags($strDesc);
-			$strDesc2 = str_replace("\r", ' ', $strDesc2);
-			$strDesc2 = str_replace("\n", ' ', $strDesc2);
-			$strDesc2 = str_replace("\t", ' ', $strDesc2);
-			$strDesc2 = preg_replace("/\&(.{0,10})\;/i",'',$strDesc2);
-			$strDesc2 = preg_replace("/[^a-zA-Z\d\"\#\№\%\:\?\*\(\)\_\-\+\=\+]/i",' ',$strDesc2);
-			$strArr = explode(" ",$strDesc2);
-			$i = 0;
-			while($i<count($strArr)){
-				$canSplice = FALSE;
-				if(strlen($strArr[$i])<=2)
-					$canSplice = TRUE;
-				if(strlen(preg_replace("/\d/i",'',$strDesc2)))
-					$canSplice = TRUE;
-				
-				if($canSplice){				
-					array_splice($strArr,$i,1);
-				} else {
-					$i += 1;
+		function parseEng($strDesc){
+			$strDesc = preg_replace("/\<style\>.*?\<\/style\>/i",'',$strDesc);//убираем тег <style> с его содержимым
+			$strDesc = preg_replace("/\<xml\>.*?\<\/xml\>/i",'',$strDesc);	//аналогично с <xml>
+			$strDesc = preg_replace("/ \+ /i",'Ё',$strDesc);	//разделяем строки подобные "html + css + js" на отдельные части
+			$strDesc = htmlspecialchars_decode($strDesc);	//декодируем html-сущности
+			$strDesc = preg_replace("/\<\!\-\-[^>]*\>/i",'',$strDesc);//убираем html комменты
+			$strDesc = preg_replace("/\<li\>/i","<li> Ё ",$strDesc);
+			$strDesc = strip_tags($strDesc);		//убираем теги, но оставляет "li"
+			$strDesc = str_replace("\r", ' ', $strDesc);//
+			$strDesc = str_replace("\n", ' ', $strDesc);//убираем всякие левые символы в т.ч. переносы строк
+			$strDesc = str_replace("\t", ' ', $strDesc);//
+			$arr     = preg_match_all("/([a-zA-Z][\w\d\-\:\+\#\. ]{1,})/i",$strDesc,$res);//ищем слова с англ.буквы, в т.ч. и последовательности слов
+			$strArr  = array();
+			foreach ($res[1] as $key => $value){//и заполняем результирующий массив
+				$value = trim($value,"-. ");//очищаем с начала строки и с конца все дефисы точки и пробелы
+				if (!isset($strArr) || !in_array($value, $strArr))
+					$strArr[] = $value;
 				}
-			}
 			return $strArr;
 		}
 		
@@ -88,7 +84,7 @@
 			$spiderName = "hhunt";
 			//качаем страничку с hh.ru, пока без пагинации, последние 1000 записей
 			if( $curl = curl_init() ) {
-				curl_setopt($curl, CURLOPT_URL, 'http://api.hh.ru/1/xml/vacancy/search/?region=$region&order=2&field=$professionalField&items=3');
+				curl_setopt($curl, CURLOPT_URL, "http://api.hh.ru/1/xml/vacancy/search/?region=".$region."&order=2&field=".$professionalField."&items=500");
 				curl_setopt($curl, CURLOPT_RETURNTRANSFER,true);
 				$out = curl_exec($curl);
 				//echo $out;
@@ -204,14 +200,38 @@
 					} else {
 						db_query("UPDATE {spider_joblist} SET `name`='$jobCaption', `companyid`='$jobCompanyId', `updated`='$jobLastUpdateTime', `wagefrom`='$jobWageFrom', `wageto`='$jobWageTo', `wagecurrency`='$jobWageCurrency', `jobdescription`='$jobDescription' WHERE `id`='$jobId' ");
 					}
-					
-					for($i = 0; $i<count($engKeywords);$i++){
-						$keyword = $engKeywords[$i];
-						$res = db_query("SELECT * FROM {portfolio_means} WHERE name = '%s'",$keyword);
-						$arr = db_fetch_array($res);
-						if($arr == FALSE){
-							$insertQuery = "INSERT INTO {portfolio_means} (`type`,`name`) VALUES(0,'%s')";
-							db_query($insertQuery,$keyword);
+
+					$selectMeansQuery = "SELECT * FROM {portfolio_means} WHERE ";
+					$insertMeansQuery = "INSERT INTO {portfolio_means} (`type`,`name`) VALUES ";
+					if(count($engKeywords)>0){
+						for($i = 0; $i<count($engKeywords);$i++){
+							$keyword = $engKeywords[$i];
+							if($i>0){
+								$selectMeansQuery .= " OR ";
+							}
+							$selectMeansQuery .= " name = '".$keyword."'";
+						}
+						$res = db_query($selectMeansQuery);
+
+						while($arr = db_fetch_object($res)){
+							$i = 0;
+							while($i<count($engKeywords)){
+								if (strcmp($arr->Name,$engKeywords[$i])==0){
+									array_splice($engKeywords,$i,1);
+								} else {
+									$i++;
+								}
+							}
+						}
+						if(count($engKeywords)>0){
+							for($i = 0; $i<count($engKeywords);$i++){
+								$keyword = $engKeywords[$i];
+								if($i>0){
+									$insertMeansQuery .= " , ";
+								}
+								$insertMeansQuery .= "(0,'".$keyword."')";
+							}
+							db_query($insertMeansQuery);
 						}
 					}
 
@@ -220,9 +240,13 @@
 					for($i = 0; $i<count($engKeywords);$i++){
 						$q = db_query("SELECT id FROM {portfolio_means} WHERE name = '%s'",$engKeywords[$i]);
 						$tag = db_fetch_object($q);
-						if ($i>0)
-							$insQuery .= ",";
-						$insQuery .= " (".$jobId.",".$tag->id.")";
+						if(strpos($insQuery,"(".$jobId.",".$tag->id.")")==FALSE){
+							if(isset($tag->id)){
+								if ($i>0)
+									$insQuery .= ",";
+								$insQuery .= " (".$jobId.",".$tag->id.")";
+							}
+						}
 					}
 					if(count($engKeywords)>0)
 						db_query($insQuery);//вставляем отношения в таблицу
@@ -247,8 +271,3 @@
 	//$params = "{'region' = '1347', 'field' = '1'}";
 	//$parser = new HHParser(json_decode($params));
 	//$parser->parse();
-
-	/*
-	TODO:
-		функция для получения параметров и их читабельных вариантов каждого парсера
-	*/
