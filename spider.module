@@ -12,6 +12,10 @@ include("parser.php");
 function spider_init() {
   drupal_add_css(drupal_get_path('module', 'spider') .'/spider.css');
   drupal_add_js(drupal_get_path('module', 'spider') .'/spider.js');
+  // We don't want caching for this module
+  if (drupal_match_path($_GET['q'],'jobs/*')) {
+    $GLOBALS['conf']['cache'] = FALSE;
+  }
 }
 
 /**
