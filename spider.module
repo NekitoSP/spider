@@ -93,7 +93,7 @@ function spider_admin_validate($form, &$form_state) {
     }
     //for proxy host
     $spider_proxy_host = $form_state['values']['spider_proxy_host'];
-    if (!filter_var($spider_proxy_host, FILTER_VALIDATE_IP)) {
+    if (!filter_var($spider_proxy_host, FILTER_VALIDATE_IP) && $spider_proxy_host != 0 ) {
 		form_set_error('spider_proxy_host', t('You must enter a valid IP address.'));
 	}
 	//for proxy port
