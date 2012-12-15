@@ -63,11 +63,11 @@ function spider_admin() {
   
   $form['spider_proxy_host'] = array(
     '#type' => 'textfield',
-    '#title' => t('Proxy host'),
+    '#title' => t('Proxy IP'),
     '#default_value' => variable_get('spider_proxy_host', 0),
     '#size' => 16,
     '#maxlength' => 16,
-    '#description' => t("Host name or IP for proxy, leave 0 if you do not need proxy."),
+    '#description' => t("Proxy host IP, leave 0 if you do not need proxy."),
     '#required' => TRUE,
   );
   
@@ -77,14 +77,14 @@ function spider_admin() {
     '#default_value' => variable_get('spider_proxy_port', 0),
     '#size' => 4,
     '#maxlength' => 4,
-    '#description' => t("Port number for proxy, leave 0 if you do not need proxy."),
+    '#description' => t("Proxy port number, leave 0 if you do not need proxy."),
     '#required' => TRUE,
   );
     
   $form['spider_update_button'] = array(
     '#type' => 'submit',
     '#submit' => array('spider_update'),
-    '#value' => t('Update'),
+    '#value' => t('Get new jobs'),
   );
 
 
@@ -177,6 +177,13 @@ function spider_menu() {
     'title' => t("Company Page"),
     'page callback' => 'spider_company',
     'page arguments' => array(2),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK
+  );
+  // Stats Page
+   $items['jobs/stats'] = array(
+    'title' => t("Statistics"),
+    'page callback' => 'spider_stats',
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK
   );
@@ -278,6 +285,24 @@ function spider_all() {
   		$query_company = "SELECT id, name FROM {spider_companies} WHERE id LIKE '%$items->companyid%'";
   		$query_company_res = db_query($query_company);
   		$company = db_fetch_object($query_company_res);
+  		
+  		// Get tags for the Job Item
+  		//SELECT table1.column1, table2.column2 FROM table1, table2, table3 WHERE table1.column1 = table2.column1 AND table1.column1 = table3.column1;
+  		// SELECT keyword_search_table.nid, keyword_search_table.keyword, node_revisions.title, node_revisions.teaser FROM keyword_search_table INNER JOIN ON keyword_search_table.nid = node_revisions.nid;
+  		//$query_tags = "SELECT meanid, Name FROM {spider_companies}, {portfolio_means} WHERE jobid='%$items->id%' AND meanid='%id%'";
+  		//$query_tags = "SELECT spider_relation.jobid, spider_relation.meanid, portfolio_means.Name FROM table spider_relation INNER JOIN node portfolio_means ON spider_relation.meanid = portfolio_means.id;";
+  		
+  		/*
+  		$query_tags = db_select('table', 'spider_relation');
+  		$query_tags->join('node', 'portfolio_means', 'portfolio_means.id = spider_relation.meanid');
+  		$query_tags_res = $query_tags
+  			->fields('t', array('spider_relation', 'jobid', 'meanid'))
+  			->fields('n', array('portfolio_means', 'id', 'Name'))
+  			->execute();
+  		*/
+  		//$query_tags_res = db_query($query_tags);
+  		//$tags = db_fetch_object($query_tags_res);
+
 
   		// Adding a Job Item to page content
   		$page_content .= 
@@ -434,6 +459,44 @@ function spider_company($input="") {
 	
 	// Pagination
 	$page_content .= theme('pager', NULL, 1);
+	
+	return $page_content;
+
+}
+
+
+/**
+ * Show a list of all jobs matching search request
+ */ 
+function spider_stats() {
+
+	// Query to get top tags
+	$query = "
+		SELECT 
+			id,
+			name,
+			(
+			SELECT
+            	COUNT(meanid) 
+            	FROM spider_relation 
+            	WHERE portfolio_means.id=spider_relation.meanid
+            ) AS 'cnt' 
+        FROM portfolio_means
+        ORDER BY Cnt DESC
+        LIMIT 0,10
+	";
+	
+	// Start All Jobs page
+	$page_content .= '<div id="spider-stats">';
+	
+	$queryResult = db_query($query);
+	
+	// Iterate through tags
+	while ($tag = db_fetch_object($queryResult)) {
+		$page_content .= "<p>$tag->name - $tag->cnt</p>";
+	}
+	  	
+	$page_content .= "</div>"; // spider-stats end
 	
 	return $page_content;
 
