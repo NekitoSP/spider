@@ -23,7 +23,7 @@ function spider_admin() {
 
   $form['spider_maxdisp'] = array(
     '#type' => 'textfield',
-    '#title' => t('Number of links in widget'),
+    '#title' => t('Number of links in the Jobs widget'),
     '#default_value' => variable_get('spider_maxdisp', 3),
     '#size' => 2,
     '#maxlength' => 2,
@@ -38,6 +38,26 @@ function spider_admin() {
     '#size' => 2,
     '#maxlength' => 2,
     '#description' => t("The maximum number of links to display on the module page."),
+    '#required' => TRUE,
+  );
+  
+  $form['spider_region'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Region'),
+    '#default_value' => variable_get('spider_region', 1347),
+    '#size' => 4,
+    '#maxlength' => 4,
+    '#description' => t("Local region from where to parse jobs. Type 1347 for Bashkortostan"),
+    '#required' => TRUE,
+  );
+  
+  $form['spider_category'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Professional category'),
+    '#default_value' => variable_get('spider_category', 1),
+    '#size' => 4,
+    '#maxlength' => 4,
+    '#description' => t("The category of professions to parse. Type 1 for IT"),
     '#required' => TRUE,
   );
   
@@ -75,7 +95,23 @@ function spider_admin() {
  * Input values validation
  */
 function spider_admin_validate($form, &$form_state) {
-	// for widget 
+	// for region 
+	$spider_region = $form_state['values']['spider_region'];
+	if (!is_numeric($spider_region)) {
+		form_set_error('spider_region', t('You must enter an integer for the maximum number of links.'));
+	}
+	else if ($spider_region <= 0) {
+    	form_set_error('spider_region', t('Maximum number of links must be positive.'));
+    }
+    // for category 
+	$spider_category = $form_state['values']['spider_category'];
+	if (!is_numeric($spider_category)) {
+		form_set_error('spider_category', t('You must enter an integer for the maximum number of links.'));
+	}
+	else if ($spider_category <= 0) {
+    	form_set_error('spider_category', t('Maximum number of links must be positive.'));
+    }
+    // for widget 
 	$maxdisp = $form_state['values']['spider_maxdisp'];
 	if (!is_numeric($maxdisp)) {
 		form_set_error('spider_maxdisp', t('You must enter an integer for the maximum number of links.'));
