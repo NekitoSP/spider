@@ -289,24 +289,6 @@ function spider_all() {
   		$query_company = "SELECT id, name FROM {spider_companies} WHERE id LIKE '%$items->companyid%'";
   		$query_company_res = db_query($query_company);
   		$company = db_fetch_object($query_company_res);
-  		
-  		// Get tags for the Job Item
-  		//SELECT table1.column1, table2.column2 FROM table1, table2, table3 WHERE table1.column1 = table2.column1 AND table1.column1 = table3.column1;
-  		// SELECT keyword_search_table.nid, keyword_search_table.keyword, node_revisions.title, node_revisions.teaser FROM keyword_search_table INNER JOIN ON keyword_search_table.nid = node_revisions.nid;
-  		//$query_tags = "SELECT meanid, Name FROM {spider_companies}, {portfolio_means} WHERE jobid='%$items->id%' AND meanid='%id%'";
-  		//$query_tags = "SELECT spider_relation.jobid, spider_relation.meanid, portfolio_means.Name FROM table spider_relation INNER JOIN node portfolio_means ON spider_relation.meanid = portfolio_means.id;";
-  		
-  		/*
-  		$query_tags = db_select('table', 'spider_relation');
-  		$query_tags->join('node', 'portfolio_means', 'portfolio_means.id = spider_relation.meanid');
-  		$query_tags_res = $query_tags
-  			->fields('t', array('spider_relation', 'jobid', 'meanid'))
-  			->fields('n', array('portfolio_means', 'id', 'Name'))
-  			->execute();
-  		*/
-  		//$query_tags_res = db_query($query_tags);
-  		//$tags = db_fetch_object($query_tags_res);
-
 
   		// Adding a Job Item to page content
   		$page_content .= 
