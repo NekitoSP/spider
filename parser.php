@@ -18,7 +18,7 @@
 			foreach ($res[1] as $key => $value){//и заполняем результирующий массив
 				$value = trim($value,"-. ");//очищаем с начала строки и с конца все дефисы точки и пробелы
 				if (!isset($strArr) || !in_array($value, $strArr))
-					$strArr[] = $value;
+					$strArr[] = strtolower($value);//lowercase
 				}
 			return $strArr;
 		}
@@ -75,6 +75,8 @@
 		public function HHParser($params){
 			$region = $params->region;
 			$professionalField = $params->field;
+			$region = 1347;
+			$professionalField = 1;
 			//Регион: Башкортостан - 1347
 			//проф.область: IT - 1
 		}
@@ -186,6 +188,7 @@
 				}
 
 				$engKeywords = parent::parseEng($jobDescription);
+				$insKewords = $engKeywords;
 				//fwrite($fp,"DUMP OF $jobId :\n");
 				//fwrite($fp, print_r($engKeywords,true));
 				//fwrite($fp,"\n");
@@ -215,17 +218,17 @@
 
 						while($arr = db_fetch_object($res)){
 							$i = 0;
-							while($i<count($engKeywords)){
-								if (strcmp($arr->Name,$engKeywords[$i])==0){
-									array_splice($engKeywords,$i,1);
+							while($i<count($insKewords)){
+								if (strcmp($arr->Name,$insKewords[$i])==0){
+									array_splice($insKewords,$i,1);
 								} else {
 									$i++;
 								}
 							}
 						}
-						if(count($engKeywords)>0){
-							for($i = 0; $i<count($engKeywords);$i++){
-								$keyword = $engKeywords[$i];
+						if(count($insKewords)>0){
+							for($i = 0; $i<count($insKewords);$i++){
+								$keyword = $insKewords[$i];
 								if($i>0){
 									$insertMeansQuery .= " , ";
 								}

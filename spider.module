@@ -399,7 +399,7 @@ function spider_cron(){
  * Implementing update
  */
 function spider_update(){
-	$params = '{"region" : 1347, "field" : 1}';
+	$params = '{"region" : "1347", "field" : "1"}';
 	$parser = new HHParser(json_decode($params));
 	$parser->parse();
 }
