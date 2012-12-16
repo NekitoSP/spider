@@ -73,20 +73,18 @@
 		private $professionalField;	//проф.область
 
 		public function HHParser($params){
-			$region = $params->region;
-			$professionalField = $params->field;
-			$region = 1347;
-			$professionalField = 1;
 			//Регион: Башкортостан - 1347
 			//проф.область: IT - 1
 		}
 
 		public function parse(){
+			$region = variable_get('spider_region', "1347")."";
+			$professionalField = variable_get('spider_category', "1")."";
 			//$fp = fopen('spiderdump.txt', 'a+'); // Текстовый режим
 			$spiderName = "hhunt";
 			//качаем страничку с hh.ru, пока без пагинации, последние 1000 записей
 			if( $curl = curl_init() ) {
-				curl_setopt($curl, CURLOPT_URL, "http://api.hh.ru/1/xml/vacancy/search/?region=".$region."&order=2&field=".$professionalField."&items=500");
+				curl_setopt($curl, CURLOPT_URL, "http://api.hh.ru/1/xml/vacancy/search/?region=".$region."&order=2&field=".$professionalField."&items=200");
 				curl_setopt($curl, CURLOPT_RETURNTRANSFER,true);
 				$out = curl_exec($curl);
 				//echo $out;
