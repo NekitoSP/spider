@@ -469,11 +469,13 @@ function spider_stats() {
             ) AS 'cnt' 
         FROM portfolio_means
         ORDER BY Cnt DESC
-        LIMIT 0,10
+        LIMIT 0,15
 	";
 	
 	// Start All Jobs page
 	$page_content .= '<div id="spider-stats">';
+	
+	$page_content .= '<h3><p>Top 15:</p></h3>';
 	
 	$queryResult = db_query($query);
 	
