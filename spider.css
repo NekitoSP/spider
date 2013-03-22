@@ -88,6 +88,8 @@ h2.spider-jobs-list {
 br {
 	display: none;
 }
-p.spider-widget {
-	margin: 0;
+
+.spider-widget a
+{
+	line-height: 1.1em !important;
 }
