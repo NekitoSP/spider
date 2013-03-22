@@ -1,7 +1,14 @@
 ﻿<?php
 	abstract class SiteParser {
 		abstract protected function parse(); // for parse
-		
+		/*
+		C:\web server\htdocs\vmk\test\sites\all\modules\spider>schtasks /create /tn "spi
+der_update" /tr "C:\web server\htdocs\vmk\test\update-task.bat" /sc minute /mo 1
+5
+	http://www.microsofttranslator.com/BV.aspx?ref=CSSKB&lo=SS&from=en&to=ru&a=http://support.microsoft.com/kb/823093/en-us?fr=1
+	
+	http://serverfault.com/questions/9038/run-a-bat-file-in-a-scheduled-task-without-a-window
+		*/
 		function parseEng($strDesc){
 			$strDesc = preg_replace("/\<style\>.*?\<\/style\>/i",'',$strDesc);//убираем тег <style> с его содержимым
 			$strDesc = preg_replace("/\<xml\>.*?\<\/xml\>/i",'',$strDesc);	//аналогично с <xml>
@@ -78,14 +85,20 @@
 		}
 
 		public function parse(){
+			$proxyhost = variable_get('spider_proxy_host', "proxy.ugatu.ac.ru");
+			$proxyport = variable_get('spider_proxy_port', "8008");
+			$proxy = $proxyhost.":".$proxyport;
 			$region = variable_get('spider_region', "1347")."";
 			$professionalField = variable_get('spider_category', "1")."";
+			//$region = "1347";
+			//$professionalField = "1";
 			//$fp = fopen('spiderdump.txt', 'a+'); // Текстовый режим
 			$spiderName = "hhunt";
 			//качаем страничку с hh.ru, пока без пагинации, последние 1000 записей
 			if( $curl = curl_init() ) {
 				curl_setopt($curl, CURLOPT_URL, "http://api.hh.ru/1/xml/vacancy/search/?region=".$region."&order=2&field=".$professionalField."&items=200");
 				curl_setopt($curl, CURLOPT_RETURNTRANSFER,true);
+				curl_setopt($curl, CURLOPT_PROXY,$proxy);
 				$out = curl_exec($curl);
 				//echo $out;
 				curl_close($curl);
@@ -113,6 +126,7 @@
 				if( $curl = curl_init() ) {
 					curl_setopt($curl, CURLOPT_URL, 'http://api.hh.ru/1/xml/vacancy/'.$jobId.'/');
 					curl_setopt($curl, CURLOPT_RETURNTRANSFER,true);
+					curl_setopt($curl, CURLOPT_PROXY,$proxy);
 					$out = curl_exec($curl);
 					curl_close($curl);
 				}
@@ -156,6 +170,7 @@
 					if( $curl = curl_init() ) {
 						curl_setopt($curl, CURLOPT_URL, 'http://api.hh.ru/1/xml/employer/'.$jobCompanyId.'/');
 						curl_setopt($curl, CURLOPT_RETURNTRANSFER,true);
+						curl_setopt($curl, CURLOPT_PROXY,$proxy);
 						$outCompany = curl_exec($curl);
 						curl_close($curl);
 					}

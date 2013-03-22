@@ -495,7 +495,7 @@ function spider_stats() {
  * Implementing cron
  */
 function spider_cron(){
-/*
+
 	//spider_update_timeout - глобальная переменная, хранит время до следующего апдейта в секундах
 	//устанавливается в админке через variable_set('spider_update_timeout',$value);
 	//$timeToUpdate = variable_get('spider_update_timeout',900);
@@ -507,13 +507,14 @@ function spider_cron(){
 		//ВРЕМЯ ОБНОВЛЯТЬСЯ!
 		//здесь нужно вытащить из БД все парсеры
 		//затем создать их в зависимости от типа
-		$query = "SELECT spiderid, spiderparams FROM {spider_active_spiders}";
-		$queryResult = db_query($query);
-		while ($parser = db_fetch_object($queryResult)){
-			create_and_parse($parser->spiderid,$parser->spiderparams);
-		}
+		//$query = "SELECT spiderid, spiderparams FROM {spider_active_spiders}";
+		//$queryResult = db_query($query);
+		//while ($parser = db_fetch_object($queryResult)){
+			//create_and_parse($parser->spiderid,$parser->spiderparams);
+			spider_update();
+			variable_set('spider_last_update',time());
+		//}
 	}
-	*/
 }
 
 /**
